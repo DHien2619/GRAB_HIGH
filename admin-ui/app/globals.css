@@ -1,0 +1,120 @@
+/* admin-ui/app/globals.css */
+/*
+  IMPORTANT (monorepo): Ensure Tailwind uses the admin-ui config.
+  Without this, Tailwind may fall back to defaults (darkMode: media),
+  causing `.dark` class toggling to have no effect.
+*/
+@config "../tailwind.config.js";
+
+@import "tailwindcss";
+
+/* 
+  font chủ đạo sẽ là Roboto.
+  Backup nếu Roboto fail là "Arial, sans-serif"
+*/
+@layer base {
+  html {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  body {
+    /* Prefer setting theme colors via classes in app/layout.tsx.
+       (Tailwind variants inside @apply are not reliable across setups.) */
+    @apply bg-gray-50 text-gray-900;
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 98%;
+  }
+}
+
+@layer components {
+  .sidebar-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .card-shadow {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  .hover-lift {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Custom scrollbar for dark mode */
+.dark::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dark::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+.dark::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-lg;
+}
+
+.dark::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* Custom primary colors */
+:root {
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+  --tooltip-bg-rgb: 17, 24, 39;   /* #111827 - Gần như đen */
+  --tooltip-text-rgb: 255, 255, 255; /* Trắng */
+}
+
+/* Dark Mode */
+.dark {
+  --tooltip-bg-rgb: 255, 255, 255; /* Trắng */
+  --tooltip-text-rgb: 17, 24, 39;  /* #111827 - Đen */
+}
+
+.text-primary-600 { color: var(--primary-600); }
+
+.text-primary-700 { color: var(--primary-700); }
+
+.bg-primary-100 { background-color: var(--primary-100); }
+
+.bg-primary-600 { background-color: var(--primary-600); }
+
+.bg-primary-700 { background-color: var(--primary-700); }
+
+.border-primary-300 { border-color: var(--primary-300); }
+
+.hover\:text-primary-700:hover { color: var(--primary-700); }
+
+.hover\:bg-primary-50:hover { background-color: var(--primary-50); }
+
+.hover\:border-primary-300:hover { border-color: var(--primary-300); }
+
+/* code hỗ trợ positioning cho tooltip */
+.recharts-tooltip-wrapper {
+  transition: none !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}

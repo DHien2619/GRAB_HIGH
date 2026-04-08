@@ -1,0 +1,38 @@
+# Loại bỏ tất cả thư mục node_modules
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Expo và React Native
+.expo/
+*/.expo/
+**/.expo/
+
+# Loại bỏ các file build/output
+dist/
+build/
+.next/
+out/
+
+# Loại bỏ file tạm
+*.log
+*.tmp
+*.cache
+
+# Loại bỏ file môi trường (RẤT QUAN TRỌNG)
+.env
+.env.local
+.env.development
+.env.production
+*/.env
+**/.env
+
+# Python (nếu có sử dụng)
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Loại bỏ các file hệ thống
+.DS_Store
+Thumbs.db

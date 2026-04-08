@@ -1,0 +1,83 @@
+const CLIENT_FOOD_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+const CLIENT_AUTH_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:5000'; //KO CẦN 
+
+export class APIError extends Error {
+  constructor(public status: number, message: string, public data?: any) {
+    super(message);
+    this.name = 'APIError';
+  }
+}
+
+interface FetchOptions extends RequestInit {
+  requireAuth?: boolean;
+}
+
+export async function fetchAPI<T = any>(
+  endpoint: string,
+  options: FetchOptions = {}
+): Promise<T> {
+  const { requireAuth = false, ...fetchOptions } = options;
+
+  const headers = new Headers(fetchOptions.headers);
+  headers.set('Content-Type', 'application/json');
+
+  // Thêm token nếu cần auth
+  if (requireAuth) {
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
+  try {
+    const response = await fetch(`${CLIENT_FOOD_URL}${endpoint}`, {
+      ...fetchOptions,
+      headers,
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new APIError(
+        response.status,
+        data.message || data.error || 'API request failed',
+        data
+      );
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof APIError) {
+      throw error;
+    }
+
+    throw new APIError(
+      0,
+      error instanceof Error ? error.message : 'Network error',
+      error
+    );
+  }
+}
+
+// Helper methods
+export const api = {
+  get: <T = any>(endpoint: string, requireAuth = false) =>
+    fetchAPI<T>(endpoint, { method: 'GET', requireAuth }),
+
+  post: <T = any>(endpoint: string, body: any, requireAuth = false) =>
+    fetchAPI<T>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      requireAuth,
+    }),
+
+  put: <T = any>(endpoint: string, body: any, requireAuth = false) =>
+    fetchAPI<T>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      requireAuth,
+    }),
+
+  delete: <T = any>(endpoint: string, requireAuth = false) =>
+    fetchAPI<T>(endpoint, { method: 'DELETE', requireAuth }),
+};

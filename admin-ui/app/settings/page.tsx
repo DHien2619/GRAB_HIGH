@@ -1,0 +1,549 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import AdminLayout from '@/components/layout/AdminLayout';
+import { adminAPI } from '../utils/api';
+
+interface SettingSection {
+  id: string;
+  title: string;
+  description: string;
+}
+
+interface CouponItem {
+  id: number;
+  code: string;
+  title?: string;
+  description?: string;
+  discount_type: 'percentage' | 'fixed_amount';
+  discount_value: number;
+  min_order_value?: number;
+  is_platform?: boolean;
+  restaurant_id?: number | null;
+}
+
+const settingSections: SettingSection[] = [
+  {
+    id: 'general',
+    title: 'Cài đặt chung',
+    description: 'Thông tin cơ bản về hệ thống'
+  },
+  {
+    id: 'payment',
+    title: 'Thanh toán',
+    description: 'Cấu hình phương thức thanh toán'
+  },
+  {
+    id: 'delivery',
+    title: 'Giao hàng',
+    description: 'Cài đặt phí và vùng giao hàng'
+  },
+  {
+    id: 'notification',
+    title: 'Thông báo',
+    description: 'Cấu hình thông báo hệ thống'
+  },
+  {
+    id: 'security',
+    title: 'Bảo mật',
+    description: 'Cài đặt bảo mật và quyền truy cập'
+  }
+];
+
+export default function SettingsPage() {
+  const [activeSection, setActiveSection] = useState('general');
+  const [coupons, setCoupons] = useState<CouponItem[]>([]);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [settings, setSettings] = useState({
+    // General Settings
+    systemName: 'FoodDeli',
+    systemEmail: 'admin@fooddeli.com',
+    systemPhone: '1900 1234',
+    maintenanceMode: false,
+    allowNewRegistrations: true,
+    
+    // Payment Settings
+    enableCashPayment: true,
+    enableCardPayment: true,
+    enableWalletPayment: true,
+    minimumOrderAmount: 50000,
+    serviceFeePercentage: 5,
+    
+    // Delivery Settings
+    baseFee: 15000,
+    feePerKm: 3000,
+    maxDeliveryDistance: 20,
+    estimatedDeliveryTime: 30,
+    
+    // Notification Settings
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    orderStatusNotifications: true,
+    
+    // Security Settings
+    sessionTimeout: 30,
+    maxLoginAttempts: 5,
+    requireTwoFactor: false,
+    passwordMinLength: 8
+  });
+
+  const handleSettingChange = (key: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  useEffect(() => {
+    const loadCoupons = async () => {
+      try {
+        setCouponLoading(true);
+        const response = await adminAPI.getAvailableCoupons();
+        if (response?.success && Array.isArray(response?.data?.coupons)) {
+          setCoupons(response.data.coupons);
+        }
+      } catch (error) {
+        console.error('Load coupons error:', error);
+      } finally {
+        setCouponLoading(false);
+      }
+    };
+
+    void loadCoupons();
+  }, []);
+
+  const handleSave = () => {
+    // In a real app, this would save to backend
+    alert('Cài đặt đã được lưu thành công!');
+  };
+
+  const renderGeneralSettings = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Tên hệ thống
+        </label>
+        <input
+          type="text"
+          value={settings.systemName}
+          onChange={(e) => handleSettingChange('systemName', e.target.value)}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Email hệ thống
+        </label>
+        <input
+          type="email"
+          value={settings.systemEmail}
+          onChange={(e) => handleSettingChange('systemEmail', e.target.value)}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Số điện thoại hỗ trợ
+        </label>
+        <input
+          type="tel"
+          value={settings.systemPhone}
+          onChange={(e) => handleSettingChange('systemPhone', e.target.value)}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Chế độ bảo trì</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Tạm khóa hệ thống để bảo trì</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.maintenanceMode}
+            onChange={(e) => handleSettingChange('maintenanceMode', e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+        </label>
+      </div>
+      
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Cho phép đăng ký mới</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Người dùng có thể tạo tài khoản mới</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.allowNewRegistrations}
+            onChange={(e) => handleSettingChange('allowNewRegistrations', e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+        </label>
+      </div>
+    </div>
+  );
+
+  const renderPaymentSettings = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
+          <div>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Tiền mặt</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">COD</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={settings.enableCashPayment}
+            onChange={(e) => handleSettingChange('enableCashPayment', e.target.checked)}
+            className="w-4 h-4 text-primary-600 rounded bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+          />
+        </div>
+        
+        <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
+          <div>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Thẻ ngân hàng</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Visa, MasterCard</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={settings.enableCardPayment}
+            onChange={(e) => handleSettingChange('enableCardPayment', e.target.checked)}
+            className="w-4 h-4 text-primary-600 rounded bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+          />
+        </div>
+        
+        <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
+          <div>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Ví điện tử</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">MoMo, ZaloPay</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={settings.enableWalletPayment}
+            onChange={(e) => handleSettingChange('enableWalletPayment', e.target.checked)}
+            className="w-4 h-4 text-primary-600 rounded bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+          />
+        </div>
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Giá trị đơn hàng tối thiểu (VND)
+        </label>
+        <input
+          type="number"
+          value={settings.minimumOrderAmount}
+          onChange={(e) => handleSettingChange('minimumOrderAmount', parseInt(e.target.value))}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Phí dịch vụ (%)
+        </label>
+        <input
+          type="number"
+          value={settings.serviceFeePercentage}
+          onChange={(e) => handleSettingChange('serviceFeePercentage', parseInt(e.target.value))}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          min="0"
+          max="100"
+        />
+      </div>
+    </div>
+  );
+
+  const renderDeliverySettings = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Phí giao hàng cơ bản (VND)
+        </label>
+        <input
+          type="number"
+          value={settings.baseFee}
+          onChange={(e) => handleSettingChange('baseFee', parseInt(e.target.value))}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Phí theo km (VND/km)
+        </label>
+        <input
+          type="number"
+          value={settings.feePerKm}
+          onChange={(e) => handleSettingChange('feePerKm', parseInt(e.target.value))}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Khoảng cách giao hàng tối đa (km)
+        </label>
+        <input
+          type="number"
+          value={settings.maxDeliveryDistance}
+          onChange={(e) => handleSettingChange('maxDeliveryDistance', parseInt(e.target.value))}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Thời gian giao hàng ước tính (phút)
+        </label>
+        <input
+          type="number"
+          value={settings.estimatedDeliveryTime}
+          onChange={(e) => handleSettingChange('estimatedDeliveryTime', parseInt(e.target.value))}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+    </div>
+  );
+
+  const renderNotificationSettings = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Thông báo Email</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Gửi thông báo qua email</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.emailNotifications}
+            onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+        </label>
+      </div>
+      
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Thông báo SMS</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Gửi thông báo qua tin nhắn</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.smsNotifications}
+            onChange={(e) => handleSettingChange('smsNotifications', e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+        </label>
+      </div>
+      
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Thông báo Push</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Thông báo trên ứng dụng di động</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.pushNotifications}
+            onChange={(e) => handleSettingChange('pushNotifications', e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+        </label>
+      </div>
+      
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Thông báo trạng thái đơn hàng</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Tự động thông báo khi đơn hàng thay đổi</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.orderStatusNotifications}
+            onChange={(e) => handleSettingChange('orderStatusNotifications', e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+        </label>
+      </div>
+    </div>
+  );
+
+  const renderSecuritySettings = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Thời gian hết hạn phiên (phút)
+        </label>
+        <input
+          type="number"
+          value={settings.sessionTimeout}
+          onChange={(e) => handleSettingChange('sessionTimeout', parseInt(e.target.value))}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Số lần đăng nhập sai tối đa
+        </label>
+        <input
+          type="number"
+          value={settings.maxLoginAttempts}
+          onChange={(e) => handleSettingChange('maxLoginAttempts', parseInt(e.target.value))}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Độ dài mật khẩu tối thiểu
+        </label>
+        <input
+          type="number"
+          value={settings.passwordMinLength}
+          onChange={(e) => handleSettingChange('passwordMinLength', parseInt(e.target.value))}
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+      </div>
+      
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">Xác thực hai yếu tố</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Yêu cầu 2FA cho tài khoản admin</p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.requireTwoFactor}
+            onChange={(e) => handleSettingChange('requireTwoFactor', e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+        </label>
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'general':
+        return renderGeneralSettings();
+      case 'payment':
+        return renderPaymentSettings();
+      case 'delivery':
+        return renderDeliverySettings();
+      case 'notification':
+        return renderNotificationSettings();
+      case 'security':
+        return renderSecuritySettings();
+      default:
+        return renderGeneralSettings();
+    }
+  };
+
+  return (
+    <AdminLayout 
+      title="Cài đặt hệ thống" 
+      subtitle="Cấu hình và tùy chỉnh hệ thống FoodDeli"
+    >
+      <div className="flex gap-8">
+        {/* Sidebar */}
+        <div className="w-64 bg-white dark:bg-gray-800 rounded-xl card-shadow p-6">
+          <nav className="space-y-2">
+            {settingSections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`w-full text-left p-3 rounded-lg transition-colors ${
+                  activeSection === section.id
+                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 border-l-4 border-primary-500 dark:border-primary-400'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/40'
+                }`}
+              >
+                <div className="font-medium">{section.title}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{section.description}</div>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl card-shadow">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              {settingSections.find(s => s.id === activeSection)?.title}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {settingSections.find(s => s.id === activeSection)?.description}
+            </p>
+          </div>
+          
+          <div className="p-6">
+            {renderContent()}
+          </div>
+          
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 rounded-b-xl">
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"
+              >
+                Đặt lại
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors"
+              >
+                Lưu thay đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl card-shadow p-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Coupon khả dụng toàn hệ thống</h3>
+          <span className="text-sm text-gray-500 dark:text-gray-400">Dùng cho admin kiểm tra coupon từ supplier/customer</span>
+        </div>
+
+        {couponLoading ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Đang tải coupon...</p>
+        ) : coupons.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Chưa có coupon nào đang khả dụng.</p>
+        ) : (
+          <div className="space-y-2">
+            {coupons.slice(0, 10).map((coupon) => (
+              <div key={coupon.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{coupon.code} {coupon.title ? `- ${coupon.title}` : ''}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {coupon.discount_type === 'percentage'
+                    ? `Giảm ${Number(coupon.discount_value).toLocaleString('vi-VN')}%`
+                    : `Giảm ${Number(coupon.discount_value).toLocaleString('vi-VN')}đ`}
+                  {' '}| Đơn tối thiểu {Number(coupon.min_order_value || 0).toLocaleString('vi-VN')}đ
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {coupon.is_platform ? 'Coupon platform' : `Coupon nhà hàng #${coupon.restaurant_id || 'N/A'}`}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+}

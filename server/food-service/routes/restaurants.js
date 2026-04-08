@@ -1,0 +1,27 @@
+const express = require('express');
+const router = express.Router();
+const RestaurantController = require('../controllers/restaurantController');
+//const { validateRestaurant } = require('../middleware/validation');
+//const auth = require('../middleware/auth');
+
+// Middleware cache headers
+const addCacheHeaders = (req, res, next) => {
+  res.set('Cache-Control', 'public, max-age=300, s-maxage=300');
+  res.set('Vary', 'Accept-Encoding');
+  next();
+};
+
+// Public routes với cache
+router.get('/', addCacheHeaders, RestaurantController.getAllRestaurants);
+router.get('/nearby', addCacheHeaders, RestaurantController.getNearbyRestaurants);
+router.get('/:id', addCacheHeaders, RestaurantController.getRestaurantById);
+router.get('/:id/foods', addCacheHeaders, RestaurantController.getFoodsByRestaurantId);
+router.get('/:id/reviews', addCacheHeaders, RestaurantController.getRestaurantReviews);
+router.post('/:id/reviews', RestaurantController.createRestaurantReview);
+router.patch('/:id/reviews', RestaurantController.updateRestaurantReview);
+
+// Protected routes (cần auth)
+//router.post('/', auth, validateRestaurant, RestaurantController.createRestaurant);
+//router.put('/:id', auth, validateRestaurant, RestaurantController.updateRestaurant);
+
+module.exports = router;
