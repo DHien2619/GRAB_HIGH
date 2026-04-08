@@ -121,7 +121,7 @@ const PROMO_BANNERS: BannerItem[] = [
   },
 ];
 
-const RestaurantClient = () => {
+const RestaurantClientInner = () => {
   const searchParams = useSearchParams();
   const searchKeyword = (searchParams.get('search') || '').trim();
   const forceNearby = searchParams.get('nearby') === '1';
@@ -605,6 +605,16 @@ const RestaurantClient = () => {
         <RestaurantList restaurants={filteredRestaurants} />
       )}
     </main>
+  );
+};
+
+import { Suspense } from 'react';
+
+const RestaurantClient = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RestaurantClientInner />
+    </Suspense>
   );
 };
 

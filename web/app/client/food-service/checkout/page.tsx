@@ -6,6 +6,12 @@ export const metadata: Metadata = {
   description: 'Xem lại và chỉnh sửa thông tin đơn hàng của bạn nếu cần.',
 };
 
+import { Suspense } from 'react';
+
 export default function CheckoutPage() {
-  return <CheckoutClient />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckoutClient />
+    </Suspense>
+  );
 }
